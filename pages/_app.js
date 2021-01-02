@@ -1,13 +1,16 @@
 import '../styles/globals.css'
 import dynamic from "next/dynamic";
-import {useEffect} from "react";
+import {createContext, useContext, useEffect, useState} from "react";
 import {createMuiTheme, ThemeProvider} from "@material-ui/core/styles";
+
+export const BackgroundContext = createContext(null)
 
 const BlurryImageBackground = dynamic(() => import("../components/BlurryBackgroundImage"), {
     ssr: false,
 });
 
 function MyApp({Component, pageProps}) {
+    const [bgImage, setBgImage] = useState('https://miro.medium.com/max/3840/1*ZF-E6Z4iLzCGwtavfPRp6g.png')
     function adaptViewport() {
         let vh = window.innerHeight * 0.01;
         document.documentElement.style.setProperty('--vh', `${vh}px`);
@@ -30,12 +33,16 @@ function MyApp({Component, pageProps}) {
         },
     });
 
+
+
     return <>
-        <ThemeProvider theme={theme}>
-            <BlurryImageBackground image={'https://miro.medium.com/max/3840/1*ZF-E6Z4iLzCGwtavfPRp6g.png'}>
-                <Component {...pageProps} />
-            </BlurryImageBackground>
-        </ThemeProvider>
+        <BackgroundContext.Provider value={{setBgImage}}>
+            <ThemeProvider theme={theme}>
+                <BlurryImageBackground image={bgImage}>
+                    <Component {...pageProps} />
+                </BlurryImageBackground>
+            </ThemeProvider>
+        </BackgroundContext.Provider>
     </>
 }
 
