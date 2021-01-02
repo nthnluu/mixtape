@@ -87,7 +87,7 @@ export default function Home() {
 
 
     return <div className="flex items-center h-full justify-center">
-        <div className="text-center max-w-md">
+        <div className="text-center max-w-md px-4">
             {user.status === 'IN' ? <AppView token={getToken()}/> : <div className='space-y-4'>
                 <h1 className="text-4xl font-bold">Welcome to Mixtape</h1>
                 <Button onClick={signInSpotify} variant='contained' size="large">
