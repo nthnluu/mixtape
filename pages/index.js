@@ -1,8 +1,6 @@
 import {useEffect, useState} from "react";
 import {useRouter} from "next/router";
 import axios from "axios";
-import GenreAutocomplete from "../components/GenreAutocomplete";
-import SeedSelectionScreen from "../components/SeedSelectionScreen";
 import {Button} from "@material-ui/core";
 import AppView from "../components/AppView";
 
@@ -63,8 +61,15 @@ export default function Home() {
         // Returns a valid token and refreshes as necessary
         const now = new Date()
         if (now >= user.token.expire) {
-            // Refresh token
-            return ''
+            axios.get(`/api/refresh?refresh_token=${user.token.refresh}`)
+                .then((res) => {
+                    const {access_token, expires_in} = res.data
+                    let expDate = new Date()
+                    expDate.setSeconds(expDate.getSeconds() + (expires_in / 2))
+                    setLocalStorage(access_token, user.token.refresh, expDate)
+                    setUser({status: 'IN', token: {access_token, expire: expDate, ...user.token}})
+                })
+                .catch(() => setUser({status: 'OUT', token: undefined}))
         } else {
             // Return current access token
             return user.token.access

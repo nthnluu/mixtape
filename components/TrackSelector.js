@@ -6,25 +6,26 @@ import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 import {BackgroundContext} from "../pages/_app";
 import FavoriteIcon from '@material-ui/icons/Favorite';
 import ReactAudioPlayer from "react-audio-player";
+import PlaylistSelector from "./PlaylistSelector";
 
 export default function TrackSelector({token, artistSeeds, trackSeeds, genreSeeds}) {
     const {setBgImage} = useContext(BackgroundContext)
     const [tracks, setTracks] = useState([])
     const [trackIndex, setTrackIndex] = useState(0)
+    const [playlistId, setPlaylistId] = useState()
 
     const currentTrack = tracks[trackIndex]
 
     const apiEndpoint = `${process.env.NEXT_PUBLIC_API_URL}/recommend?artists=${artistSeeds.join()}&genres=${genreSeeds.join()}&tracks=${trackSeeds.join()}&token=${token}`
     useEffect(() => {
-        // artists=${artistSeeds.join()}&genres=${genreSeeds.join()}&
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/recommend?artists=${artistSeeds.join()}&genres=${genreSeeds.join()}&tracks=${trackSeeds.join()}&token=${token}`)
+        axios.get(apiEndpoint)
             .then(res => setTracks(res.data))
             .catch(error => console.log(error))
     }, [artistSeeds, trackSeeds, genreSeeds])
 
     useEffect(() => {
         if (trackIndex > (tracks.length / 2)) {
-            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/recommend?artists=${artistSeeds.join()}&genres=${genreSeeds.join()}&tracks=${trackSeeds.join()}&token=${token}`)
+            axios.get(apiEndpoint)
                 .then(res => setTracks([...tracks, ...res.data]))
                 .catch(error => console.log(error))
         }
@@ -33,7 +34,6 @@ export default function TrackSelector({token, artistSeeds, trackSeeds, genreSeed
     useEffect(() => {
         setBgImage(currentTrack && currentTrack.image.url)
     }, [currentTrack])
-
 
 
     const navigateForward = () => {
@@ -47,7 +47,18 @@ export default function TrackSelector({token, artistSeeds, trackSeeds, genreSeed
             setTrackIndex(trackIndex - 1)
         }
     }
+
+    const saveToPlaylist = () => {
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/add_playlist/${playlistId}/${currentTrack['uri']}?token=${token}`)
+            .then(() => navigateForward())
+            .catch(error => console.log(error))
+    }
+
     return currentTrack ? <div className="max-w-lg ">
+        <div className="mb-4">
+            <PlaylistSelector token={token} onChange={(event) => setPlaylistId(event.target.value)} value={playlistId}/>
+        </div>
+
         <ReactAudioPlayer
             src={currentTrack && currentTrack['preview_url']}
             autoPlay
@@ -59,7 +70,7 @@ export default function TrackSelector({token, artistSeeds, trackSeeds, genreSeed
             <IconButton aria-label="delete" onClick={navigateBackwards}>
                 <ArrowBackIosIcon/>
             </IconButton>
-            <IconButton aria-label="delete">
+            <IconButton aria-label="delete" onClick={saveToPlaylist}>
                 <FavoriteIcon/>
             </IconButton>
             <IconButton aria-label="delete" onClick={navigateForward}>
