@@ -1,4 +1,3 @@
-import dynamic from "next/dynamic";
 import {useEffect, useState} from "react";
 import {useRouter} from "next/router";
 
@@ -7,34 +6,54 @@ export default function Home() {
     const [user, setUser] = useState({status: 'LOADING', token: undefined})
     const {access, refresh, expire, error} = router.query
 
-    function signInSpotify() {
+    const signInSpotify = () => {
+        // Start authentication process
         window.location.href = `/api/spotify_login`
     }
 
-    useEffect(() => {
+    const setLocalStorage = (access, refresh, expirationDate) => {
+        // Updates the local storage to hold Spotify credentials
         const ls = window.localStorage
-        if (access && refresh && expire) {
-            let expirationDate = new Date()
-            expirationDate.setSeconds(expirationDate.getSeconds() + (expire / 2))
-            ls.setItem('spotifyAccessToken', access)
-            ls.setItem('spotifyRefreshToken', refresh)
-            ls.setItem('spotifyExpires', expirationDate)
-            setUser({status: 'IN', token: {access, refresh, expire: expirationDate}})
-        }
+        ls.setItem('spotifyAccessToken', access)
+        ls.setItem('spotifyRefreshToken', refresh)
+        ls.setItem('spotifyExpires', expirationDate)
+    }
 
+    const fetchSpotifyCredentials = () => {
+        // Fetches Spotify credentials from local storage
+        const ls = window.localStorage
         const accessToken = ls.getItem('spotifyAccessToken');
         const refreshToken = ls.getItem('spotifyRefreshToken');
         const expiresAt = ls.getItem('spotifyExpires');
 
+        return {accessToken, refreshToken, expiresAt}
+    }
+
+    useEffect(() => {
+        // Check for credentials in the URL
+        if (access && refresh && expire) {
+            // Store credentials in local storage
+            let expirationDate = new Date()
+            expirationDate.setSeconds(expirationDate.getSeconds() + (expire / 2))
+            setLocalStorage(access, refresh, expirationDate)
+            setUser({status: 'IN', token: {access, refresh, expire: expirationDate}})
+        }
+
+        // Check for credential in local storage
+        const {accessToken, refreshToken, expiresAt} = fetchSpotifyCredentials()
+
         if (accessToken && refreshToken && expiresAt) {
+            // Found credentials
             let expirationDate = new Date(expiresAt)
             setUser({status: 'IN', token: {access: accessToken, refresh: refreshToken, expire: expirationDate}})
         } else {
+            // No credentials found
             setUser({status: 'OUT', token: undefined})
         }
     }, [access, refresh, expire])
 
     const getToken = () => {
+        // Returns a valid token and refreshes as necessary
         const now = new Date()
         if (now >= user.token.expire) {
             // Refresh token
@@ -43,7 +62,6 @@ export default function Home() {
             // Return current access token
             return user.token.access
         }
-
     }
 
     return <div className="flex items-center h-full justify-center">
@@ -55,7 +73,5 @@ export default function Home() {
                 <i className="fab fa-spotify mr-2 text-xl"/>Continue with Spotify
             </button>
         </div>
-
-
     </div>
 }
