@@ -1,7 +1,6 @@
 import {useContext, useEffect, useState} from "react";
 import axios from "axios";
 import IconButton from "@material-ui/core/IconButton";
-import PlayArrowIcon from '@material-ui/icons/PlayArrow';
 import ArrowBackIosIcon from '@material-ui/icons/ArrowBackIos';
 import ArrowForwardIosIcon from '@material-ui/icons/ArrowForwardIos';
 import {BackgroundContext} from "../pages/_app";
@@ -15,18 +14,26 @@ export default function TrackSelector({token, artistSeeds, trackSeeds, genreSeed
 
     const currentTrack = tracks[trackIndex]
 
+    const apiEndpoint = `${process.env.NEXT_PUBLIC_API_URL}/recommend?artists=${artistSeeds.join()}&genres=${genreSeeds.join()}&tracks=${trackSeeds.join()}&token=${token}`
     useEffect(() => {
         // artists=${artistSeeds.join()}&genres=${genreSeeds.join()}&
-        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/recommend?artists=${artistSeeds.join()}&genres=${genreSeeds.join()}&tracks=${tracks.join()}&token=${token}`)
-            .then(res => {
-                setTracks(res.data)
-            })
+        axios.get(`${process.env.NEXT_PUBLIC_API_URL}/recommend?artists=${artistSeeds.join()}&genres=${genreSeeds.join()}&tracks=${trackSeeds.join()}&token=${token}`)
+            .then(res => setTracks(res.data))
             .catch(error => console.log(error))
     }, [artistSeeds, trackSeeds, genreSeeds])
 
     useEffect(() => {
+        if (trackIndex > (tracks.length / 2)) {
+            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/recommend?artists=${artistSeeds.join()}&genres=${genreSeeds.join()}&tracks=${trackSeeds.join()}&token=${token}`)
+                .then(res => setTracks([...tracks, ...res.data]))
+                .catch(error => console.log(error))
+        }
+    }, [trackIndex])
+
+    useEffect(() => {
         setBgImage(currentTrack && currentTrack.image.url)
     }, [currentTrack])
+
 
 
     const navigateForward = () => {
