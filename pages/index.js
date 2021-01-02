@@ -1,10 +1,17 @@
 import {useEffect, useState} from "react";
 import {useRouter} from "next/router";
+import axios from "axios";
+import GenreAutocomplete from "../components/GenreAutocomplete";
+import SeedSelectionScreen from "../components/SeedSelectionScreen";
+import {Button} from "@material-ui/core";
+import AppView from "../components/AppView";
 
 export default function Home() {
     const router = useRouter()
     const [user, setUser] = useState({status: 'LOADING', token: undefined})
     const {access, refresh, expire, error} = router.query
+    const [apiData, setApiData] = useState(undefined)
+
 
     const signInSpotify = () => {
         // Start authentication process
@@ -64,14 +71,25 @@ export default function Home() {
         }
     }
 
+    useEffect(() => {
+        if (user.status === 'IN') {
+            axios.get(`${process.env.NEXT_PUBLIC_API_URL}/genres?token=${getToken()}`)
+                .then(res => setApiData(res.data))
+                .catch(error => console.log(error))
+        }
+
+    }, [user])
+
+
     return <div className="flex items-center h-full justify-center">
-        <div className="text-center max-w-md space-y-4">
-            <h1 className="text-4xl font-bold">Welcome to Mixtape</h1>
-            <h1>{user.status === 'IN' && getToken()}</h1>
-            <button onClick={signInSpotify}
-                    className="text-lg border-2 border-white px-4 py-2 hover:opacity-50 focus:opacity-75">
-                <i className="fab fa-spotify mr-2 text-xl"/>Continue with Spotify
-            </button>
+        <div className="text-center max-w-md">
+            {user.status === 'IN' ? <AppView token={getToken()}/> : <div className='space-y-4'>
+                <h1 className="text-4xl font-bold">Welcome to Mixtape</h1>
+                <Button onClick={signInSpotify} variant='contained' size="large">
+                    <i className="fab fa-spotify mr-2 text-xl"/>Continue with Spotify
+                </Button>
+            </div>}
+
         </div>
     </div>
 }
