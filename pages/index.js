@@ -68,6 +68,7 @@ export default function Home() {
                     expDate.setSeconds(expDate.getSeconds() + (expires_in / 2))
                     setLocalStorage(access_token, user.token.refresh, expDate)
                     setUser({status: 'IN', token: {access_token, expire: expDate, ...user.token}})
+                    return access_token
                 })
                 .catch(() => setUser({status: 'OUT', token: undefined}))
         } else {
